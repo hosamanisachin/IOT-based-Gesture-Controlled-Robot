@@ -1,0 +1,318 @@
+   1               		.file	"uart.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.text
+   8               	.Ltext0:
+   9               		.cfi_sections	.debug_frame
+  10               	.global	uart_init
+  12               	uart_init:
+  13               	.LVL0:
+  14               	.LFB0:
+  15               		.file 1 "uart.c"
+   1:uart.c        **** #include "uart.h"
+   2:uart.c        **** 
+   3:uart.c        **** void uart_init(uint32_t baud)
+   4:uart.c        **** {
+  16               		.loc 1 4 1 view -0
+  17               		.cfi_startproc
+  18               	/* prologue: function */
+  19               	/* frame size = 0 */
+  20               	/* stack size = 0 */
+  21               	.L__stack_usage = 0
+  22               		.loc 1 4 1 is_stmt 0 view .LVU1
+  23 0000 9B01      		movw r18,r22
+  24 0002 AC01      		movw r20,r24
+   5:uart.c        **** 	// set up baud rate
+   6:uart.c        **** 	uint16_t ubrr = (F_CPU >> 4) / baud - 1;
+  25               		.loc 1 6 2 is_stmt 1 view .LVU2
+  26               		.loc 1 6 31 is_stmt 0 view .LVU3
+  27 0004 60E9      		ldi r22,lo8(-112)
+  28 0006 70ED      		ldi r23,lo8(-48)
+  29 0008 83E0      		ldi r24,lo8(3)
+  30 000a 90E0      		ldi r25,0
+  31               	.LVL1:
+  32               		.loc 1 6 31 view .LVU4
+  33 000c 0E94 0000 		call __udivmodsi4
+  34               		.loc 1 6 11 view .LVU5
+  35 0010 2150      		subi r18,1
+  36 0012 3109      		sbc r19,__zero_reg__
+  37               	.LVL2:
+   7:uart.c        **** 	UBRRL = ubrr & 0x00FF;
+  38               		.loc 1 7 2 is_stmt 1 view .LVU6
+  39               		.loc 1 7 8 is_stmt 0 view .LVU7
+  40 0014 29B9      		out 0x9,r18
+   8:uart.c        **** 	UBRRH = ubrr >> 8;
+  41               		.loc 1 8 2 is_stmt 1 view .LVU8
+  42               		.loc 1 8 8 is_stmt 0 view .LVU9
+  43 0016 30BD      		out 0x20,r19
+   9:uart.c        **** 	// 8-bit transfer, no parity, 1 stop bit
+  10:uart.c        **** 	UCSRC = BV(URSEL) | BV(UCSZ1) | BV(UCSZ0);
+  44               		.loc 1 10 2 is_stmt 1 view .LVU10
+  45               		.loc 1 10 8 is_stmt 0 view .LVU11
+  46 0018 86E8      		ldi r24,lo8(-122)
+  47 001a 80BD      		out 0x20,r24
+  11:uart.c        **** 	// enable tx, rx
+  12:uart.c        **** 	UCSRB = BV(TXEN) | BV(RXEN);
+  48               		.loc 1 12 2 is_stmt 1 view .LVU12
+  49               		.loc 1 12 8 is_stmt 0 view .LVU13
+  50 001c 88E1      		ldi r24,lo8(24)
+  51 001e 8AB9      		out 0xa,r24
+  52               	/* epilogue start */
+  13:uart.c        **** }
+  53               		.loc 1 13 1 view .LVU14
+  54 0020 0895      		ret
+  55               		.cfi_endproc
+  56               	.LFE0:
+  58               	.global	uart_putch
+  60               	uart_putch:
+  61               	.LFB1:
+  14:uart.c        **** 
+  15:uart.c        **** void uart_putch(char ch)
+  16:uart.c        **** {
+  62               		.loc 1 16 1 is_stmt 1 view -0
+  63               		.cfi_startproc
+  64               	/* prologue: function */
+  65               	/* frame size = 0 */
+  66               	/* stack size = 0 */
+  67               	.L__stack_usage = 0
+  68               	.LVL3:
+  69               	.L3:
+  17:uart.c        **** 	// wait while UDRE bit is 0
+  18:uart.c        **** 	while((UCSRA & BV(UDRE))==0);
+  70               		.loc 1 18 30 discriminator 1 view .LVU16
+  71               		.loc 1 18 7 is_stmt 0 discriminator 1 view .LVU17
+  72 0022 5D9B      		sbis 0xb,5
+  73 0024 00C0      		rjmp .L3
+  19:uart.c        **** 	// then write data to UDR
+  20:uart.c        **** 	UDR = ch;
+  74               		.loc 1 20 2 is_stmt 1 view .LVU18
+  75               		.loc 1 20 6 is_stmt 0 view .LVU19
+  76 0026 8CB9      		out 0xc,r24
+  77               	/* epilogue start */
+  21:uart.c        **** }
+  78               		.loc 1 21 1 view .LVU20
+  79 0028 0895      		ret
+  80               		.cfi_endproc
+  81               	.LFE1:
+  83               	.global	uart_getch
+  85               	uart_getch:
+  86               	.LFB2:
+  22:uart.c        **** char uart_getch()
+  23:uart.c        **** {
+  87               		.loc 1 23 1 is_stmt 1 view -0
+  88               		.cfi_startproc
+  89               	/* prologue: function */
+  90               	/* frame size = 0 */
+  91               	/* stack size = 0 */
+  92               	.L__stack_usage = 0
+  93               	.L7:
+  24:uart.c        **** 	// wait while RXC bit is 0
+  25:uart.c        **** 	while((UCSRA & BV(RXC))==0);
+  94               		.loc 1 25 29 discriminator 1 view .LVU22
+  95               		.loc 1 25 7 is_stmt 0 discriminator 1 view .LVU23
+  96 002a 5F9B      		sbis 0xb,7
+  97 002c 00C0      		rjmp .L7
+  26:uart.c        **** 	// then read data from UDR
+  27:uart.c        **** 	return (char)UDR;
+  98               		.loc 1 27 2 is_stmt 1 view .LVU24
+  99               		.loc 1 27 9 is_stmt 0 view .LVU25
+ 100 002e 8CB1      		in r24,0xc
+ 101               	/* epilogue start */
+  28:uart.c        **** }
+ 102               		.loc 1 28 1 view .LVU26
+ 103 0030 0895      		ret
+ 104               		.cfi_endproc
+ 105               	.LFE2:
+ 107               	.global	uart_puts
+ 109               	uart_puts:
+ 110               	.LVL4:
+ 111               	.LFB3:
+  29:uart.c        **** void uart_puts(char str[])
+  30:uart.c        **** {
+ 112               		.loc 1 30 1 is_stmt 1 view -0
+ 113               		.cfi_startproc
+ 114               		.loc 1 30 1 is_stmt 0 view .LVU28
+ 115 0032 0F93      		push r16
+ 116               	.LCFI0:
+ 117               		.cfi_def_cfa_offset 3
+ 118               		.cfi_offset 16, -2
+ 119 0034 1F93      		push r17
+ 120               	.LCFI1:
+ 121               		.cfi_def_cfa_offset 4
+ 122               		.cfi_offset 17, -3
+ 123 0036 CF93      		push r28
+ 124               	.LCFI2:
+ 125               		.cfi_def_cfa_offset 5
+ 126               		.cfi_offset 28, -4
+ 127               	/* prologue: function */
+ 128               	/* frame size = 0 */
+ 129               	/* stack size = 3 */
+ 130               	.L__stack_usage = 3
+ 131 0038 8C01      		movw r16,r24
+  31:uart.c        **** 	uint8_t i;
+ 132               		.loc 1 31 2 is_stmt 1 view .LVU29
+  32:uart.c        **** 	for(i=0; str[i]!='\0'; i++)
+ 133               		.loc 1 32 2 view .LVU30
+ 134               	.LVL5:
+ 135               		.loc 1 32 7 is_stmt 0 view .LVU31
+ 136 003a C0E0      		ldi r28,0
+ 137               	.LVL6:
+ 138               	.L10:
+ 139               		.loc 1 32 14 discriminator 1 view .LVU32
+ 140 003c F801      		movw r30,r16
+ 141 003e EC0F      		add r30,r28
+ 142 0040 F11D      		adc r31,__zero_reg__
+ 143 0042 8081      		ld r24,Z
+ 144               		.loc 1 32 2 discriminator 1 view .LVU33
+ 145 0044 8111      		cpse r24,__zero_reg__
+ 146 0046 00C0      		rjmp .L11
+ 147               	/* epilogue start */
+  33:uart.c        **** 		uart_putch(str[i]);
+  34:uart.c        **** }
+ 148               		.loc 1 34 1 view .LVU34
+ 149 0048 CF91      		pop r28
+ 150               	.LVL7:
+ 151               		.loc 1 34 1 view .LVU35
+ 152 004a 1F91      		pop r17
+ 153 004c 0F91      		pop r16
+ 154               	.LVL8:
+ 155               		.loc 1 34 1 view .LVU36
+ 156 004e 0895      		ret
+ 157               	.LVL9:
+ 158               	.L11:
+  33:uart.c        **** 		uart_putch(str[i]);
+ 159               		.loc 1 33 3 is_stmt 1 discriminator 3 view .LVU37
+ 160 0050 0E94 0000 		call uart_putch
+ 161               	.LVL10:
+  32:uart.c        **** 	for(i=0; str[i]!='\0'; i++)
+ 162               		.loc 1 32 26 is_stmt 0 discriminator 3 view .LVU38
+ 163 0054 CF5F      		subi r28,lo8(-(1))
+ 164               	.LVL11:
+  32:uart.c        **** 	for(i=0; str[i]!='\0'; i++)
+ 165               		.loc 1 32 26 discriminator 3 view .LVU39
+ 166 0056 00C0      		rjmp .L10
+ 167               		.cfi_endproc
+ 168               	.LFE3:
+ 170               	.global	uart_gets
+ 172               	uart_gets:
+ 173               	.LVL12:
+ 174               	.LFB4:
+  35:uart.c        **** void uart_gets(char str[])
+  36:uart.c        **** {
+ 175               		.loc 1 36 1 is_stmt 1 view -0
+ 176               		.cfi_startproc
+ 177               		.loc 1 36 1 is_stmt 0 view .LVU41
+ 178 0058 0F93      		push r16
+ 179               	.LCFI3:
+ 180               		.cfi_def_cfa_offset 3
+ 181               		.cfi_offset 16, -2
+ 182 005a 1F93      		push r17
+ 183               	.LCFI4:
+ 184               		.cfi_def_cfa_offset 4
+ 185               		.cfi_offset 17, -3
+ 186 005c CF93      		push r28
+ 187               	.LCFI5:
+ 188               		.cfi_def_cfa_offset 5
+ 189               		.cfi_offset 28, -4
+ 190               	/* prologue: function */
+ 191               	/* frame size = 0 */
+ 192               	/* stack size = 3 */
+ 193               	.L__stack_usage = 3
+ 194 005e 8C01      		movw r16,r24
+  37:uart.c        **** 	char ch;
+ 195               		.loc 1 37 2 is_stmt 1 view .LVU42
+  38:uart.c        **** 	uint8_t i=0;
+ 196               		.loc 1 38 2 view .LVU43
+ 197               	.LVL13:
+ 198               		.loc 1 38 10 is_stmt 0 view .LVU44
+ 199 0060 C0E0      		ldi r28,0
+ 200               	.LVL14:
+ 201               	.L13:
+  39:uart.c        **** 	do
+ 202               		.loc 1 39 2 is_stmt 1 discriminator 1 view .LVU45
+  40:uart.c        **** 	{
+  41:uart.c        **** 		ch = uart_getch();
+ 203               		.loc 1 41 3 discriminator 1 view .LVU46
+ 204               		.loc 1 41 8 is_stmt 0 discriminator 1 view .LVU47
+ 205 0062 0E94 0000 		call uart_getch
+ 206               	.LVL15:
+  42:uart.c        **** 		str[i++] = ch;
+ 207               		.loc 1 42 3 is_stmt 1 discriminator 1 view .LVU48
+ 208               		.loc 1 42 8 is_stmt 0 discriminator 1 view .LVU49
+ 209 0066 E1E0      		ldi r30,lo8(1)
+ 210 0068 EC0F      		add r30,r28
+ 211               	.LVL16:
+ 212               		.loc 1 42 12 discriminator 1 view .LVU50
+ 213 006a D801      		movw r26,r16
+ 214 006c AC0F      		add r26,r28
+ 215 006e B11D      		adc r27,__zero_reg__
+ 216 0070 8C93      		st X,r24
+  43:uart.c        **** 	} while (ch!='\r');
+ 217               		.loc 1 43 2 discriminator 1 view .LVU51
+ 218 0072 8D30      		cpi r24,lo8(13)
+ 219 0074 01F4      		brne .L14
+  44:uart.c        **** 	str[i++] = '\n';
+ 220               		.loc 1 44 2 is_stmt 1 view .LVU52
+ 221               	.LVL17:
+ 222               		.loc 1 44 11 is_stmt 0 view .LVU53
+ 223 0076 E00F      		add r30,r16
+ 224 0078 F12F      		mov r31,r17
+ 225 007a F11D      		adc r31,__zero_reg__
+ 226 007c 8AE0      		ldi r24,lo8(10)
+ 227               	.LVL18:
+ 228               		.loc 1 44 11 view .LVU54
+ 229 007e 8083      		st Z,r24
+ 230               	.LVL19:
+  45:uart.c        **** 	str[i] = '\0';
+ 231               		.loc 1 45 2 is_stmt 1 view .LVU55
+  44:uart.c        **** 	str[i++] = '\n';
+ 232               		.loc 1 44 7 is_stmt 0 view .LVU56
+ 233 0080 E2E0      		ldi r30,lo8(2)
+ 234 0082 EC0F      		add r30,r28
+ 235               	.LVL20:
+ 236               		.loc 1 45 9 view .LVU57
+ 237 0084 E00F      		add r30,r16
+ 238 0086 F12F      		mov r31,r17
+ 239 0088 F11D      		adc r31,__zero_reg__
+ 240               	.LVL21:
+ 241               		.loc 1 45 9 view .LVU58
+ 242 008a 1082      		st Z,__zero_reg__
+ 243               	/* epilogue start */
+  46:uart.c        **** }
+ 244               		.loc 1 46 1 view .LVU59
+ 245 008c CF91      		pop r28
+ 246               	.LVL22:
+ 247               		.loc 1 46 1 view .LVU60
+ 248 008e 1F91      		pop r17
+ 249 0090 0F91      		pop r16
+ 250               	.LVL23:
+ 251               		.loc 1 46 1 view .LVU61
+ 252 0092 0895      		ret
+ 253               	.LVL24:
+ 254               	.L14:
+  42:uart.c        **** 	} while (ch!='\r');
+ 255               		.loc 1 42 8 view .LVU62
+ 256 0094 CE2F      		mov r28,r30
+ 257 0096 00C0      		rjmp .L13
+ 258               		.cfi_endproc
+ 259               	.LFE4:
+ 261               	.Letext0:
+ 262               		.file 2 "/home/acer/Desktop/CDAC/AVR/softwares/avr-gcc-8.2.0-x64-linux/avr/include/stdint.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 uart.c
+     /tmp/ccgouly6.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccgouly6.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccgouly6.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccgouly6.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccgouly6.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccgouly6.s:12     .text:0000000000000000 uart_init
+     /tmp/ccgouly6.s:60     .text:0000000000000022 uart_putch
+     /tmp/ccgouly6.s:85     .text:000000000000002a uart_getch
+     /tmp/ccgouly6.s:109    .text:0000000000000032 uart_puts
+     /tmp/ccgouly6.s:172    .text:0000000000000058 uart_gets
+
+UNDEFINED SYMBOLS
+__udivmodsi4

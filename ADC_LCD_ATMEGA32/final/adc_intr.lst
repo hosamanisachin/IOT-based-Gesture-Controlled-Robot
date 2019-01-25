@@ -1,0 +1,262 @@
+   1               		.file	"adc_intr.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__tmp_reg__ = 0
+   6               	__zero_reg__ = 1
+   7               		.text
+   8               	.Ltext0:
+   9               		.cfi_sections	.debug_frame
+  10               	.global	adc_init
+  12               	adc_init:
+  13               	.LFB6:
+  14               		.file 1 "adc_intr.c"
+   1:adc_intr.c    **** #include <avr/io.h>
+   2:adc_intr.c    **** #include <util/delay.h>
+   3:adc_intr.c    **** #include <avr/interrupt.h>
+   4:adc_intr.c    **** #include "adc_intr.h"
+   5:adc_intr.c    **** 
+   6:adc_intr.c    **** //#define ADC_1	2 // x-axis
+   7:adc_intr.c    **** //#define ADC_2 	3 // y-axis
+   8:adc_intr.c    **** 
+   9:adc_intr.c    **** 
+  10:adc_intr.c    **** 
+  11:adc_intr.c    **** volatile uint16_t adc_val=0;
+  12:adc_intr.c    **** 
+  13:adc_intr.c    **** volatile uint16_t adc_flag=0;
+  14:adc_intr.c    **** 
+  15:adc_intr.c    **** void adc_init(void)
+  16:adc_intr.c    **** {
+  15               		.loc 1 16 1 view -0
+  16               		.cfi_startproc
+  17               	/* prologue: function */
+  18               	/* frame size = 0 */
+  19               	/* stack size = 0 */
+  20               	.L__stack_usage = 0
+  17:adc_intr.c    **** 	// set PORTA as input
+  18:adc_intr.c    **** 	DDRA = 0x00; //~BV(ADC_CHANNEL);
+  21               		.loc 1 18 2 view .LVU1
+  22               		.loc 1 18 7 is_stmt 0 view .LVU2
+  23 0000 1ABA      		out 0x1a,__zero_reg__
+  19:adc_intr.c    **** 	PORTA = 0xFF; // BV(ADC_CHANNEL);
+  24               		.loc 1 19 2 is_stmt 1 view .LVU3
+  25               		.loc 1 19 8 is_stmt 0 view .LVU4
+  26 0002 8FEF      		ldi r24,lo8(-1)
+  27 0004 8BBB      		out 0x1b,r24
+  20:adc_intr.c    **** 
+  21:adc_intr.c    **** 	// enable adc and adc interrupt
+  22:adc_intr.c    **** 	ADCSRA = BV(ADEN) | BV(ADIE);
+  28               		.loc 1 22 2 is_stmt 1 view .LVU5
+  29               		.loc 1 22 9 is_stmt 0 view .LVU6
+  30 0006 88E8      		ldi r24,lo8(-120)
+  31 0008 86B9      		out 0x6,r24
+  23:adc_intr.c    **** 	// enable global interrupt
+  24:adc_intr.c    **** 	sei();
+  32               		.loc 1 24 2 is_stmt 1 view .LVU7
+  33               	/* #APP */
+  34               	 ;  24 "adc_intr.c" 1
+  35 000a 7894      		sei
+  36               	 ;  0 "" 2
+  37               	/* #NOAPP */
+  38               	/* epilogue start */
+  25:adc_intr.c    **** }
+  39               		.loc 1 25 1 is_stmt 0 view .LVU8
+  40 000c 0895      		ret
+  41               		.cfi_endproc
+  42               	.LFE6:
+  44               	.global	adc_select
+  46               	adc_select:
+  47               	.LVL0:
+  48               	.LFB7:
+  26:adc_intr.c    **** 
+  27:adc_intr.c    **** int adc_select(int chan)
+  28:adc_intr.c    **** {	
+  49               		.loc 1 28 1 is_stmt 1 view -0
+  50               		.cfi_startproc
+  51               	/* prologue: function */
+  52               	/* frame size = 0 */
+  53               	/* stack size = 0 */
+  54               	.L__stack_usage = 0
+  29:adc_intr.c    **** 	ADMUX = 0x00; //clear the ADMUX
+  55               		.loc 1 29 2 view .LVU10
+  56               		.loc 1 29 8 is_stmt 0 view .LVU11
+  57 000e 17B8      		out 0x7,__zero_reg__
+  30:adc_intr.c    **** 	if(chan==2)
+  58               		.loc 1 30 2 is_stmt 1 view .LVU12
+  59               		.loc 1 30 4 is_stmt 0 view .LVU13
+  60 0010 8230      		cpi r24,2
+  61 0012 9105      		cpc r25,__zero_reg__
+  62 0014 01F4      		brne .L3
+  31:adc_intr.c    **** 	{	
+  32:adc_intr.c    **** 		ADMUX = 0x62; //BV(MUX0) | BV(MUX1) | BV(ADLAR) | BV(REFS0); //select ADC2
+  63               		.loc 1 32 3 is_stmt 1 view .LVU14
+  64               		.loc 1 32 9 is_stmt 0 view .LVU15
+  65 0016 82E6      		ldi r24,lo8(98)
+  66               	.LVL1:
+  67               		.loc 1 32 9 view .LVU16
+  68 0018 87B9      		out 0x7,r24
+  33:adc_intr.c    **** 		ADCSRA |= BV(ADSC); //start conversion
+  69               		.loc 1 33 3 is_stmt 1 view .LVU17
+  70               		.loc 1 33 10 is_stmt 0 view .LVU18
+  71 001a 369A      		sbi 0x6,6
+  34:adc_intr.c    **** 		return 1;
+  72               		.loc 1 34 3 is_stmt 1 view .LVU19
+  73               		.loc 1 34 10 is_stmt 0 view .LVU20
+  74 001c 81E0      		ldi r24,lo8(1)
+  75 001e 90E0      		ldi r25,0
+  76 0020 0895      		ret
+  77               	.LVL2:
+  78               	.L3:
+  35:adc_intr.c    **** 	}
+  36:adc_intr.c    **** 
+  37:adc_intr.c    **** 	else if(chan==3)
+  79               		.loc 1 37 7 is_stmt 1 view .LVU21
+  80               		.loc 1 37 9 is_stmt 0 view .LVU22
+  81 0022 0397      		sbiw r24,3
+  82 0024 01F4      		brne .L5
+  38:adc_intr.c    **** 	{
+  39:adc_intr.c    **** 		ADMUX = 0x63; //BV(MUX2) | BV(ADLAR) | BV(REFS0); //select ADC3
+  83               		.loc 1 39 3 is_stmt 1 view .LVU23
+  84               		.loc 1 39 9 is_stmt 0 view .LVU24
+  85 0026 83E6      		ldi r24,lo8(99)
+  86               	.LVL3:
+  87               		.loc 1 39 9 view .LVU25
+  88 0028 87B9      		out 0x7,r24
+  40:adc_intr.c    **** 		ADCSRA |= BV(ADSC); //start conversion
+  89               		.loc 1 40 3 is_stmt 1 view .LVU26
+  90               		.loc 1 40 10 is_stmt 0 view .LVU27
+  91 002a 369A      		sbi 0x6,6
+  41:adc_intr.c    **** 		return 2;
+  92               		.loc 1 41 3 is_stmt 1 view .LVU28
+  93               		.loc 1 41 10 is_stmt 0 view .LVU29
+  94 002c 82E0      		ldi r24,lo8(2)
+  95 002e 90E0      		ldi r25,0
+  96 0030 0895      		ret
+  97               	.LVL4:
+  98               	.L5:
+  99               	.LVL5:
+ 100               	/* epilogue start */
+  42:adc_intr.c    **** 	}
+  43:adc_intr.c    **** }
+ 101               		.loc 1 43 1 view .LVU30
+ 102 0032 0895      		ret
+ 103               		.cfi_endproc
+ 104               	.LFE7:
+ 106               	.global	adc_read
+ 108               	adc_read:
+ 109               	.LFB8:
+  44:adc_intr.c    **** 
+  45:adc_intr.c    **** 
+  46:adc_intr.c    **** 
+  47:adc_intr.c    **** uint16_t adc_read(void)
+  48:adc_intr.c    **** {
+ 110               		.loc 1 48 1 is_stmt 1 view -0
+ 111               		.cfi_startproc
+ 112               	/* prologue: function */
+ 113               	/* frame size = 0 */
+ 114               	/* stack size = 0 */
+ 115               	.L__stack_usage = 0
+  49:adc_intr.c    **** 	// read value from adc
+  50:adc_intr.c    **** 	uint16_t val = ADCH;
+ 116               		.loc 1 50 2 view .LVU32
+ 117               		.loc 1 50 17 is_stmt 0 view .LVU33
+ 118 0034 85B1      		in r24,0x5
+ 119               	.LVL6:
+  51:adc_intr.c    **** 	//decide for left and right
+  52:adc_intr.c    **** 	
+  53:adc_intr.c    **** 
+  54:adc_intr.c    **** 	return val;
+ 120               		.loc 1 54 2 is_stmt 1 view .LVU34
+  55:adc_intr.c    **** }
+ 121               		.loc 1 55 1 is_stmt 0 view .LVU35
+ 122 0036 90E0      		ldi r25,0
+ 123               	/* epilogue start */
+ 124 0038 0895      		ret
+ 125               		.cfi_endproc
+ 126               	.LFE8:
+ 128               	.global	__vector_16
+ 130               	__vector_16:
+ 131               	.LFB9:
+  56:adc_intr.c    **** 
+  57:adc_intr.c    **** ISR(ADC_vect)
+  58:adc_intr.c    **** {
+ 132               		.loc 1 58 1 is_stmt 1 view -0
+ 133               		.cfi_startproc
+ 134 003a 8F93      		__gcc_isr 1
+ 135 003c 9F93      		push r25
+ 136               	.LCFI0:
+ 137               		.cfi_def_cfa_offset 3
+ 138               		.cfi_offset 25, -2
+ 139               	/* prologue: Signal */
+ 140               	/* frame size = 0 */
+ 141               	/* stack size = 1...5 */
+ 142               	.L__stack_usage = 1 + __gcc_isr.n_pushed
+  59:adc_intr.c    **** 	adc_val = adc_read();
+ 143               		.loc 1 59 2 view .LVU37
+ 144               	.LBB4:
+ 145               	.LBI4:
+  47:adc_intr.c    **** {
+ 146               		.loc 1 47 10 view .LVU38
+ 147               	.LBB5:
+  50:adc_intr.c    **** 	//decide for left and right
+ 148               		.loc 1 50 2 view .LVU39
+  50:adc_intr.c    **** 	//decide for left and right
+ 149               		.loc 1 50 17 is_stmt 0 view .LVU40
+ 150 003e 85B1      		in r24,0x5
+  50:adc_intr.c    **** 	//decide for left and right
+ 151               		.loc 1 50 11 view .LVU41
+ 152 0040 90E0      		ldi r25,0
+ 153               	.LVL7:
+  54:adc_intr.c    **** }
+ 154               		.loc 1 54 2 is_stmt 1 view .LVU42
+  54:adc_intr.c    **** }
+ 155               		.loc 1 54 2 is_stmt 0 view .LVU43
+ 156               	.LBE5:
+ 157               	.LBE4:
+ 158               		.loc 1 59 10 view .LVU44
+ 159 0042 9093 0000 		sts adc_val+1,r25
+ 160 0046 8093 0000 		sts adc_val,r24
+  60:adc_intr.c    **** 	adc_flag = 1;
+ 161               		.loc 1 60 2 is_stmt 1 view .LVU45
+ 162               		.loc 1 60 11 is_stmt 0 view .LVU46
+ 163 004a 81E0      		ldi r24,lo8(1)
+ 164 004c 90E0      		ldi r25,0
+ 165 004e 9093 0000 		sts adc_flag+1,r25
+ 166 0052 8093 0000 		sts adc_flag,r24
+ 167               	/* epilogue start */
+  61:adc_intr.c    **** }
+ 168               		.loc 1 61 1 view .LVU47
+ 169 0056 9F91      		pop r25
+ 170 0058 8F91      		__gcc_isr 2
+ 171 005a 1895      		reti
+ 172               		__gcc_isr 0,r24
+ 173               		.cfi_endproc
+ 174               	.LFE9:
+ 176               	.global	adc_flag
+ 177               		.section .bss
+ 180               	adc_flag:
+ 181 0000 0000      		.zero	2
+ 182               	.global	adc_val
+ 185               	adc_val:
+ 186 0002 0000      		.zero	2
+ 187               		.text
+ 188               	.Letext0:
+ 189               		.file 2 "/home/acer/Desktop/CDAC/AVR/softwares/avr-gcc-8.2.0-x64-linux/avr/include/stdint.h"
+ 190               		.file 3 "adc_intr.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 adc_intr.c
+     /tmp/cc9ueNxf.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/cc9ueNxf.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/cc9ueNxf.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/cc9ueNxf.s:5      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/cc9ueNxf.s:6      *ABS*:0000000000000001 __zero_reg__
+     /tmp/cc9ueNxf.s:12     .text:0000000000000000 adc_init
+     /tmp/cc9ueNxf.s:46     .text:000000000000000e adc_select
+     /tmp/cc9ueNxf.s:108    .text:0000000000000034 adc_read
+     /tmp/cc9ueNxf.s:130    .text:000000000000003a __vector_16
+                            *ABS*:0000000000000001 __gcc_isr.n_pushed.001
+     /tmp/cc9ueNxf.s:185    .bss:0000000000000002 adc_val
+     /tmp/cc9ueNxf.s:180    .bss:0000000000000000 adc_flag
+
+UNDEFINED SYMBOLS
+__do_clear_bss
